@@ -3683,6 +3683,14 @@ namespace Azure.Storage.Blobs
                                 _value.Metadata[_headerPair.Name.Substring(10)] = _headerPair.Value;
                             }
                         }
+                        _value.ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+                        foreach (Azure.Core.HttpHeader _headerPair in response.Headers)
+                        {
+                            if (_headerPair.Name.StartsWith("x-ms-or-", System.StringComparison.InvariantCulture))
+                            {
+                                _value.ObjectReplication[_headerPair.Name.Substring(8)] = _headerPair.Value;
+                            }
+                        }
                         if (response.Headers.TryGetValue("Content-Length", out _header))
                         {
                             _value.ContentLength = long.Parse(_header, System.Globalization.CultureInfo.InvariantCulture);
@@ -3762,10 +3770,6 @@ namespace Azure.Storage.Blobs
                         if (response.Headers.TryGetValue("x-ms-lease-status", out _header))
                         {
                             _value.LeaseStatus = Azure.Storage.Blobs.BlobRestClient.Serialization.ParseLeaseStatus(_header);
-                        }
-                        if (response.Headers.TryGetValue("x-ms-version-id", out _header))
-                        {
-                            _value.VersionId = _header;
                         }
                         if (response.Headers.TryGetValue("Accept-Ranges", out _header))
                         {
@@ -4145,6 +4149,14 @@ namespace Azure.Storage.Blobs
                                 _value.Metadata[_headerPair.Name.Substring(10)] = _headerPair.Value;
                             }
                         }
+                        _value.ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+                        foreach (Azure.Core.HttpHeader _headerPair in response.Headers)
+                        {
+                            if (_headerPair.Name.StartsWith("x-ms-or-", System.StringComparison.InvariantCulture))
+                            {
+                                _value.ObjectReplication[_headerPair.Name.Substring(8)] = _headerPair.Value;
+                            }
+                        }
                         if (response.Headers.TryGetValue("x-ms-blob-type", out _header))
                         {
                             _value.BlobType = Azure.Storage.Blobs.BlobRestClient.Serialization.ParseBlobType(_header);
@@ -4264,14 +4276,6 @@ namespace Azure.Storage.Blobs
                         if (response.Headers.TryGetValue("x-ms-access-tier-change-time", out _header))
                         {
                             _value.AccessTierChangedOn = System.DateTimeOffset.Parse(_header, System.Globalization.CultureInfo.InvariantCulture);
-                        }
-                        if (response.Headers.TryGetValue("x-ms-version-id", out _header))
-                        {
-                            _value.VersionId = _header;
-                        }
-                        if (response.Headers.TryGetValue("x-ms-is-current-version", out _header))
-                        {
-                            _value.IsCurrentVersion = bool.Parse(_header);
                         }
 
                         // Create the response
@@ -16370,6 +16374,11 @@ namespace Azure.Storage.Blobs.Models
         public System.Collections.Generic.IDictionary<string, string> Metadata { get; internal set; }
 
         /// <summary>
+        /// ObjectReplication
+        /// </summary>
+        public System.Collections.Generic.IDictionary<string, string> ObjectReplication { get; internal set; }
+
+        /// <summary>
         /// Creates a new BlobItem instance
         /// </summary>
         internal BlobItem()
@@ -16387,6 +16396,7 @@ namespace Azure.Storage.Blobs.Models
             {
                 Properties = new Azure.Storage.Blobs.Models.BlobItemProperties();
                 Metadata = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+                ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
             }
         }
 
@@ -16439,6 +16449,15 @@ namespace Azure.Storage.Blobs.Models
                     _value.Metadata[_pair.Name.LocalName] = _pair.Value;
                 }
             }
+            _value.ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+            _child = element.Element(System.Xml.Linq.XName.Get("ObjectReplication", ""));
+            if (_child != null)
+            {
+                foreach (System.Xml.Linq.XElement _pair in _child.Elements())
+                {
+                    _value.ObjectReplication[_pair.Name.LocalName] = _pair.Value;
+                }
+            }
             CustomizeFromXml(element, _value);
             return _value;
         }
@@ -16461,7 +16480,8 @@ namespace Azure.Storage.Blobs.Models
             string snapshot = default,
             string versionId = default,
             bool? isCurrentVersion = default,
-            System.Collections.Generic.IDictionary<string, string> metadata = default)
+            System.Collections.Generic.IDictionary<string, string> metadata = default,
+            System.Collections.Generic.IDictionary<string, string> objectReplication = default)
         {
             return new BlobItem()
             {
@@ -16472,6 +16492,7 @@ namespace Azure.Storage.Blobs.Models
                 VersionId = versionId,
                 IsCurrentVersion = isCurrentVersion,
                 Metadata = metadata,
+                ObjectReplication = objectReplication,
             };
         }
     }
@@ -17158,6 +17179,11 @@ namespace Azure.Storage.Blobs.Models
         public System.Collections.Generic.IDictionary<string, string> Metadata { get; internal set; }
 
         /// <summary>
+        /// x-ms-or
+        /// </summary>
+        public System.Collections.Generic.IDictionary<string, string> ObjectReplication { get; internal set; }
+
+        /// <summary>
         /// The blob's type.
         /// </summary>
         public Azure.Storage.Blobs.Models.BlobType BlobType { get; internal set; }
@@ -17310,21 +17336,12 @@ namespace Azure.Storage.Blobs.Models
         public System.DateTimeOffset AccessTierChangedOn { get; internal set; }
 
         /// <summary>
-        /// A DateTime value returned by the service that uniquely identifies the blob. The value of this header indicates the blob version, and may be used in subsequent requests to access this version of the blob.
-        /// </summary>
-        public string VersionId { get; internal set; }
-
-        /// <summary>
-        /// The value of this header indicates whether version of this blob is a current version, see also x-ms-version-id header.
-        /// </summary>
-        public bool IsCurrentVersion { get; internal set; }
-
-        /// <summary>
         /// Creates a new BlobProperties instance
         /// </summary>
         public BlobProperties()
         {
             Metadata = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+            ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
         }
     }
 
@@ -17338,78 +17355,76 @@ namespace Azure.Storage.Blobs.Models
         /// </summary>
         public static BlobProperties BlobProperties(
             System.DateTimeOffset lastModified,
+            Azure.Storage.Blobs.Models.LeaseDurationType leaseDuration,
+            Azure.Storage.Blobs.Models.LeaseState leaseState,
             Azure.Storage.Blobs.Models.LeaseStatus leaseStatus,
             long contentLength,
-            string contentType,
-            Azure.Storage.Blobs.Models.LeaseState leaseState,
+            string destinationSnapshot,
+            Azure.ETag eTag,
             byte[] contentHash,
             string contentEncoding,
             string contentDisposition,
             string contentLanguage,
-            string cacheControl,
-            Azure.Storage.Blobs.Models.LeaseDurationType leaseDuration,
-            long blobSequenceNumber,
-            string destinationSnapshot,
-            string acceptRanges,
             bool isIncrementalCopy,
-            int blobCommittedBlockCount,
+            string cacheControl,
             Azure.Storage.Blobs.Models.CopyStatus copyStatus,
-            bool isServerEncrypted,
+            long blobSequenceNumber,
             System.Uri copySource,
-            string encryptionKeySha256,
+            string acceptRanges,
             string copyProgress,
-            string encryptionScope,
+            int blobCommittedBlockCount,
             string copyId,
-            string accessTier,
+            bool isServerEncrypted,
             string copyStatusDescription,
-            bool accessTierInferred,
+            string encryptionKeySha256,
             System.DateTimeOffset copyCompletedOn,
-            string archiveStatus,
+            string encryptionScope,
             Azure.Storage.Blobs.Models.BlobType blobType,
-            System.DateTimeOffset accessTierChangedOn,
+            string accessTier,
+            System.Collections.Generic.IDictionary<string, string> objectReplication,
+            bool accessTierInferred,
             System.Collections.Generic.IDictionary<string, string> metadata,
-            string versionId,
+            string archiveStatus,
             System.DateTimeOffset createdOn,
-            bool isCurrentVersion,
-            Azure.ETag eTag)
+            System.DateTimeOffset accessTierChangedOn,
+            string contentType)
         {
             return new BlobProperties()
             {
                 LastModified = lastModified,
+                LeaseDuration = leaseDuration,
+                LeaseState = leaseState,
                 LeaseStatus = leaseStatus,
                 ContentLength = contentLength,
-                ContentType = contentType,
-                LeaseState = leaseState,
+                DestinationSnapshot = destinationSnapshot,
+                ETag = eTag,
                 ContentHash = contentHash,
                 ContentEncoding = contentEncoding,
                 ContentDisposition = contentDisposition,
                 ContentLanguage = contentLanguage,
-                CacheControl = cacheControl,
-                LeaseDuration = leaseDuration,
-                BlobSequenceNumber = blobSequenceNumber,
-                DestinationSnapshot = destinationSnapshot,
-                AcceptRanges = acceptRanges,
                 IsIncrementalCopy = isIncrementalCopy,
-                BlobCommittedBlockCount = blobCommittedBlockCount,
+                CacheControl = cacheControl,
                 CopyStatus = copyStatus,
-                IsServerEncrypted = isServerEncrypted,
+                BlobSequenceNumber = blobSequenceNumber,
                 CopySource = copySource,
-                EncryptionKeySha256 = encryptionKeySha256,
+                AcceptRanges = acceptRanges,
                 CopyProgress = copyProgress,
-                EncryptionScope = encryptionScope,
+                BlobCommittedBlockCount = blobCommittedBlockCount,
                 CopyId = copyId,
-                AccessTier = accessTier,
+                IsServerEncrypted = isServerEncrypted,
                 CopyStatusDescription = copyStatusDescription,
-                AccessTierInferred = accessTierInferred,
+                EncryptionKeySha256 = encryptionKeySha256,
                 CopyCompletedOn = copyCompletedOn,
-                ArchiveStatus = archiveStatus,
+                EncryptionScope = encryptionScope,
                 BlobType = blobType,
-                AccessTierChangedOn = accessTierChangedOn,
+                AccessTier = accessTier,
+                ObjectReplication = objectReplication,
+                AccessTierInferred = accessTierInferred,
                 Metadata = metadata,
-                VersionId = versionId,
+                ArchiveStatus = archiveStatus,
                 CreatedOn = createdOn,
-                IsCurrentVersion = isCurrentVersion,
-                ETag = eTag,
+                AccessTierChangedOn = accessTierChangedOn,
+                ContentType = contentType,
             };
         }
     }
@@ -19486,9 +19501,9 @@ namespace Azure.Storage.Blobs.Models
         #pragma warning restore CA1819 // Properties should not return arrays
 
         /// <summary>
-        /// A DateTime value returned by the service that uniquely identifies the blob. The value of this header indicates the blob version, and may be used in subsequent requests to access this version of the blob.
+        /// x-ms-or
         /// </summary>
-        public string VersionId { get; internal set; }
+        public System.Collections.Generic.IDictionary<string, string> ObjectReplication { get; internal set; }
 
         /// <summary>
         /// Content
@@ -19501,6 +19516,7 @@ namespace Azure.Storage.Blobs.Models
         public FlattenedDownloadProperties()
         {
             Metadata = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+            ObjectReplication = new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
         }
     }
 }
@@ -21191,5 +21207,55 @@ namespace Azure.Storage.Blobs.Models
     }
 }
 #endregion class Error
+
+#region enum ObjectReplication
+namespace Azure.Storage.Blobs.Models
+{
+    /// <summary>
+    /// Optional. Specifies a user-defined name-value pair associated with the blob. If no name-value pairs are specified, the operation will copy the metadata from the source blob or file to the destination blob. If one or more name-value pairs are specified, the destination blob is created with the specified metadata, and metadata is not copied from the source blob or file. Note that beginning with version 2009-09-19, metadata names must adhere to the naming rules for C# identifiers. See Naming and Referencing Containers, Blobs, and Metadata for more information.
+    /// </summary>
+    public enum ObjectReplication
+    {
+        /// <summary>
+        /// complete
+        /// </summary>
+        Complete,
+
+        /// <summary>
+        /// failed
+        /// </summary>
+        Failed
+    }
+}
+
+namespace Azure.Storage.Blobs
+{
+    internal static partial class BlobRestClient
+    {
+        public static partial class Serialization
+        {
+            public static string ToString(Azure.Storage.Blobs.Models.ObjectReplication value)
+            {
+                return value switch
+                {
+                    Azure.Storage.Blobs.Models.ObjectReplication.Complete => "complete",
+                    Azure.Storage.Blobs.Models.ObjectReplication.Failed => "failed",
+                    _ => throw new System.ArgumentOutOfRangeException(nameof(value), value, "Unknown Azure.Storage.Blobs.Models.ObjectReplication value.")
+                };
+            }
+
+            public static Azure.Storage.Blobs.Models.ObjectReplication ParseObjectReplication(string value)
+            {
+                return value switch
+                {
+                    "complete" => Azure.Storage.Blobs.Models.ObjectReplication.Complete,
+                    "failed" => Azure.Storage.Blobs.Models.ObjectReplication.Failed,
+                    _ => throw new System.ArgumentOutOfRangeException(nameof(value), value, "Unknown Azure.Storage.Blobs.Models.ObjectReplication value.")
+                };
+            }
+        }
+    }
+}
+#endregion enum ObjectReplication
 #endregion Models
 

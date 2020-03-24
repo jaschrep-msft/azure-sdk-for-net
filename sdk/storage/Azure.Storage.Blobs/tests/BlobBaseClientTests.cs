@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
@@ -120,6 +121,44 @@ namespace Azure.Storage.Blobs.Test
         }
 
         #region Sequential Download
+
+        [Test]
+        public async Task OrsDownloadAsync()
+        {
+            // This is a recorded ONLY test with a special container we previously setup, as we can't auto setup policies yet
+            var container = InstrumentClient(new BlobContainerClient(new Uri("<TODO get rid of this redacted SAS link>")));
+            var blob = container.GetBlobClient(GetNewBlobName());
+            try
+            {
+                await blob.UploadAsync(new MemoryStream(GetRandomBuffer(Constants.KB)));
+                await Task.Delay(30000);
+                var response = await blob.DownloadAsync();
+                Assert.AreEqual(1, response.Value.Details.ObjectReplication.Count);
+            }
+            finally
+            {
+                await blob.DeleteIfExistsAsync();
+            }
+        }
+
+        [Test]
+        public async Task OrsGetPropertiesAsync()
+        {
+            // This is a recorded ONLY test with a special container we previously setup, as we can't auto setup policies yet
+            var container = InstrumentClient(new BlobContainerClient(new Uri("<TODO get rid of this redacted SAS link>")));
+            var blob = container.GetBlobClient(GetNewBlobName());
+            try
+            {
+                await blob.UploadAsync(new MemoryStream(GetRandomBuffer(Constants.KB)));
+                await Task.Delay(30000);
+                var response = await blob.GetPropertiesAsync();
+                Assert.AreEqual(1, response.Value.ObjectReplication.Count);
+            }
+            finally
+            {
+                await blob.DeleteIfExistsAsync();
+            }
+        }
 
         [Test]
         public async Task DownloadAsync()

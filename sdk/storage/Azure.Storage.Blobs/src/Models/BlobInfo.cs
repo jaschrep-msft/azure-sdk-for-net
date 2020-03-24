@@ -105,6 +105,11 @@ namespace Azure.Storage.Blobs.Models
         public IDictionary<string, string> Metadata => _flattened.Metadata;
 
         /// <summary>
+        /// x-ms-meta
+        /// </summary>
+        public IDictionary<string, string> ObjectReplication => _flattened.ObjectReplication;
+
+        /// <summary>
         /// Indicates the range of bytes returned in the event that the client requested a subset of the blob by setting the 'Range' request header.
         /// </summary>
         public string ContentRange => _flattened.ContentRange;
