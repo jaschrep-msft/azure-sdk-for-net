@@ -17,13 +17,23 @@ namespace Azure.Storage.Test.Shared
         private readonly int _raiseExceptionAt;
         private readonly Exception _exceptionToRaise;
         private int _remainingExceptions;
+        private Action _onFault;
 
-        public FaultyStream(Stream innerStream, int raiseExceptionAt, int maxExceptions, Exception exceptionToRaise)
+        /// <summary>
+        /// Constructs a stream that will throw once a specific number of bytes are read.
+        /// </summary>
+        /// <param name="innerStream">Stream to wrap.</param>
+        /// <param name="raiseExceptionAt">Which byte will cause the throw.</param>
+        /// <param name="maxExceptions">How many times to throw on that byte.</param>
+        /// <param name="exceptionToRaise">The exception to throw.</param>
+        /// <param name="onFault">Callback executed on decision to throw, allowing tests to track.</param>
+        public FaultyStream(Stream innerStream, int raiseExceptionAt, int maxExceptions, Exception exceptionToRaise, Action onFault)
         {
             _innerStream = innerStream;
             _raiseExceptionAt = raiseExceptionAt;
             _exceptionToRaise = exceptionToRaise;
             _remainingExceptions = maxExceptions;
+            _onFault = onFault;
         }
 
         public override bool CanRead => _innerStream.CanRead;
@@ -40,8 +50,15 @@ namespace Azure.Storage.Test.Shared
             set => _innerStream.Position = value;
         }
 
-        public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) =>
-            await _innerStream.CopyToAsync(destination, bufferSize, cancellationToken);
+        private Exception Fault()
+        {
+            _remainingExceptions--;  // internal counting
+            _onFault();              // callback for test tracking
+            return _exceptionToRaise;
+        }
+
+        //public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) =>
+        //    await _innerStream.CopyToAsync(destination, bufferSize, cancellationToken);
 
         public override void Flush() => _innerStream.Flush();
 
@@ -50,40 +67,37 @@ namespace Azure.Storage.Test.Shared
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_remainingExceptions == 0 || Position + count <= _raiseExceptionAt || Position + count >= _innerStream.Length)
+            if (_remainingExceptions == 0 || Position + count <= _raiseExceptionAt || _raiseExceptionAt >= _innerStream.Length)
             {
                 return _innerStream.Read(buffer, offset, count);
             }
             else
             {
-                _remainingExceptions--;
-                throw _exceptionToRaise;
+                throw Fault();
             }
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            if (_remainingExceptions == 0 || Position + count <= _raiseExceptionAt || Position + count >= _innerStream.Length)
+            if (_remainingExceptions == 0 || Position + count <= _raiseExceptionAt || _raiseExceptionAt >= _innerStream.Length)
             {
                 return _innerStream.ReadAsync(buffer, offset, count, cancellationToken);
             }
             else
             {
-                _remainingExceptions--;
-                throw _exceptionToRaise;
+                throw Fault();
             }
         }
 
         public override int ReadByte()
         {
-            if (_remainingExceptions == 0 || Position <= _raiseExceptionAt || Position >= _innerStream.Length)
+            if (_remainingExceptions == 0 || Position <= _raiseExceptionAt || _raiseExceptionAt >= _innerStream.Length)
             {
                 return _innerStream.ReadByte();
             }
             else
             {
-                _remainingExceptions--;
-                throw _exceptionToRaise;
+                throw Fault();
             }
         }
 

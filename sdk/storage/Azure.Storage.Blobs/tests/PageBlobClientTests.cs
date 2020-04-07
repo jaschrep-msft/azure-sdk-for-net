@@ -525,11 +525,12 @@ namespace Azure.Storage.Blobs.Test
             var credentials = new StorageSharedKeyCredential(
                 TestConfigDefault.AccountName,
                 TestConfigDefault.AccountKey);
+            (BlobClientOptions faultyOptions, Func<int> timesDownloadFaulted) = GetFaultyBlobConnectionOptions();
             BlobContainerClient containerClientFaulty = InstrumentClient(
                 new BlobContainerClient(
                     test.Container.Uri,
                     credentials,
-                    GetFaultyBlobConnectionOptions()));
+                    faultyOptions));
 
             // Arrange
             var pageBlobName = GetNewBlobName();
@@ -545,7 +546,8 @@ namespace Azure.Storage.Blobs.Test
             var progressHandler = new Progress<long>(progress => { progressList.Add(progress); /*logger.LogTrace("Progress: {progress}", progress.BytesTransferred);*/ });
 
             // Act
-            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault")))
+            int timesUploadFaulted = 0;
+            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault"), () => timesUploadFaulted++))
             {
                 await blobFaulty.UploadPagesAsync(stream, offset, progressHandler: progressHandler);
 
@@ -561,6 +563,8 @@ namespace Azure.Storage.Blobs.Test
             var actual = new MemoryStream();
             await downloadResponse.Value.Content.CopyToAsync(actual);
             TestHelper.AssertSequenceEqual(data, actual.ToArray());
+            Assert.AreNotEqual(0, timesDownloadFaulted());
+            Assert.AreNotEqual(0, timesUploadFaulted);
         }
 
         [LiveOnly]

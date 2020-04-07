@@ -17,6 +17,9 @@ namespace Azure.Storage.Test.Shared
         private readonly int _raiseExceptionAt;
         private readonly Exception _exceptionToRaise;
 
+        private bool _makeFaultyStream = true;
+        public int TimesFaulted { get; private set; } = 0;
+
         public FaultyDownloadPipelinePolicy(int raiseExceptionAt, Exception exceptionToRaise)
         {
             _raiseExceptionAt = raiseExceptionAt;
@@ -26,13 +29,19 @@ namespace Azure.Storage.Test.Shared
         public override async ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
         {
             await ProcessNextAsync(message, pipeline).ConfigureAwait(false);
-            await InjectFaultAsync(message, async: true).ConfigureAwait(false);
+            if (_makeFaultyStream)
+            {
+                await InjectFaultAsync(message, async: true).ConfigureAwait(false);
+            }
         }
 
         public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
         {
             ProcessNext(message, pipeline);
-            InjectFaultAsync(message, async: false).EnsureCompleted();
+            if (_makeFaultyStream)
+            {
+                InjectFaultAsync(message, async: false).EnsureCompleted();
+            }
         }
 
         private async Task InjectFaultAsync(HttpMessage message, bool async)
@@ -61,7 +70,9 @@ namespace Azure.Storage.Test.Shared
                     intermediate,
                     _raiseExceptionAt,
                     1,
-                    _exceptionToRaise);
+                    _exceptionToRaise,
+                    () => TimesFaulted++);
+                _makeFaultyStream = false;
             }
         }
     }

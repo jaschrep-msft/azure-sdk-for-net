@@ -68,14 +68,15 @@ namespace Azure.Storage.Test.Shared
             return Recording.InstrumentClientOptions(options);
         }
 
-        public BlobClientOptions GetFaultyBlobConnectionOptions(
+        public (BlobClientOptions options, Func<int> timesFaulted) GetFaultyBlobConnectionOptions(
             int raiseAt = default,
             Exception raise = default)
         {
             raise = raise ?? new Exception("Simulated connection fault");
             BlobClientOptions options = GetOptions();
-            options.AddPolicy(new FaultyDownloadPipelinePolicy(raiseAt, raise), HttpPipelinePosition.PerCall);
-            return options;
+            var policy = new FaultyDownloadPipelinePolicy(raiseAt, raise);
+            options.AddPolicy(policy, HttpPipelinePosition.PerCall);
+            return (options, () => policy.TimesFaulted);
         }
 
         private BlobServiceClient GetServiceClientFromSharedKeyConfig(TenantConfiguration config, BlobClientOptions options = default)

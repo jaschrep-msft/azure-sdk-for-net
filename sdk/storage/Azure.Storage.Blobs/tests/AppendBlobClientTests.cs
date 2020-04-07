@@ -565,13 +565,14 @@ namespace Azure.Storage.Blobs.Test
             const int blobSize = 1 * Constants.MB;
             await using DisposingContainer test = await GetTestContainerAsync();
 
+            (BlobClientOptions faultyOptions, Func<int> timesDownloadFaulted) = GetFaultyBlobConnectionOptions();
             BlobContainerClient containerFaulty = InstrumentClient(
                 new BlobContainerClient(
                     test.Container.Uri,
                     new StorageSharedKeyCredential(
                         TestConfigDefault.AccountName,
                         TestConfigDefault.AccountKey),
-                    GetFaultyBlobConnectionOptions()));
+                    faultyOptions));
 
             // Arrange
             var blobName = GetNewBlobName();
@@ -585,7 +586,8 @@ namespace Azure.Storage.Blobs.Test
             var progressHandler = new Progress<long>(progress => { progressList.Add(progress); /*logger.LogTrace("Progress: {progress}", progress.BytesTransferred);*/ });
 
             // Act
-            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault")))
+            int timesUploadFaulted = 0;
+            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault"), () => timesUploadFaulted++))
             {
                 await blobFaulty.AppendBlockAsync(stream, progressHandler: progressHandler);
                 await WaitForProgressAsync(progressList, data.LongLength);
@@ -600,6 +602,8 @@ namespace Azure.Storage.Blobs.Test
             await downloadResponse.Value.Content.CopyToAsync(actual);
             Assert.AreEqual(data.Length, actual.Length);
             TestHelper.AssertSequenceEqual(data, actual.ToArray());
+            Assert.AreNotEqual(0, timesDownloadFaulted());
+            Assert.AreNotEqual(0, timesUploadFaulted);
         }
 
         [LiveOnly]

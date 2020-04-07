@@ -82,14 +82,15 @@ namespace Azure.Storage.Files.Shares.Tests
             return await DisposingFile.CreateAsync(test, file);
         }
 
-        public ShareClientOptions GetFaultyFileConnectionOptions(
+        public (ShareClientOptions options, Func<int> timesFaulted) GetFaultyFileConnectionOptions(
             int raiseAt = default,
             Exception raise = default)
         {
             raise = raise ?? new IOException("Simulated connection fault");
             ShareClientOptions options = GetOptions();
-            options.AddPolicy(new FaultyDownloadPipelinePolicy(raiseAt, raise), HttpPipelinePosition.PerCall);
-            return options;
+            var policy = new FaultyDownloadPipelinePolicy(raiseAt, raise);
+            options.AddPolicy(policy, HttpPipelinePosition.PerCall);
+            return (options, () => policy.TimesFaulted);
         }
 
         public ShareServiceClient GetServiceClient_SharedKey()

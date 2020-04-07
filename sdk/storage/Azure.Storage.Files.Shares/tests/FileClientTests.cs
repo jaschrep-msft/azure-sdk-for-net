@@ -1553,11 +1553,12 @@ namespace Azure.Storage.Files.Shares.Test
             ShareClient share = test.Share;
 
             ShareDirectoryClient directory = InstrumentClient(share.GetDirectoryClient(GetNewDirectoryName()));
+            (ShareClientOptions faultyOptions, Func<int> timesDownloadFaulted) = GetFaultyFileConnectionOptions(raiseAt: 256 * Constants.KB);
             ShareDirectoryClient directoryFaulty = InstrumentClient(
                 new ShareDirectoryClient(
                     directory.Uri,
                     new StorageSharedKeyCredential(TestConfigDefault.AccountName, TestConfigDefault.AccountKey),
-                    GetFaultyFileConnectionOptions(raiseAt: 256 * Constants.KB)));
+                    faultyOptions));
 
             await directory.CreateAsync();
 
@@ -1582,6 +1583,7 @@ namespace Azure.Storage.Files.Shares.Test
             var actual = new MemoryStream();
             await downloadResponse.Value.Content.CopyToAsync(actual, 128 * Constants.KB);
             TestHelper.AssertSequenceEqual(data, actual.ToArray());
+            Assert.AreNotEqual(0, timesDownloadFaulted());
         }
 
         [Test]
@@ -1967,13 +1969,14 @@ namespace Azure.Storage.Files.Shares.Test
             ShareClient share = test.Share;
 
             ShareDirectoryClient directory = InstrumentClient(share.GetDirectoryClient(GetNewDirectoryName()));
+            (ShareClientOptions faultyOptions, Func<int> timesDownloadFaulted) = GetFaultyFileConnectionOptions();
             ShareDirectoryClient directoryFaulty = InstrumentClient(
                 new ShareDirectoryClient(
                     directory.Uri,
                     new StorageSharedKeyCredential(
                         TestConfigDefault.AccountName,
                         TestConfigDefault.AccountKey),
-                    GetFaultyFileConnectionOptions()));
+                    faultyOptions));
 
             await directory.CreateAsync();
 
@@ -1988,7 +1991,8 @@ namespace Azure.Storage.Files.Shares.Test
             var progressHandler = new Progress<long>(progress => { progressList.Add(progress); /*logger.LogTrace("Progress: {progress}", progress.BytesTransferred);*/ });
 
             // Act
-            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault")))
+            int timesUploadFaulted = 0;
+            using (var stream = new FaultyStream(new MemoryStream(data), 256 * Constants.KB, 1, new IOException("Simulated stream fault"), () => timesUploadFaulted++))
             {
                 Response<ShareFileUploadInfo> result = await fileFaulty.UploadRangeAsync(
                     range: new HttpRange(offset, dataSize),
@@ -2011,6 +2015,8 @@ namespace Azure.Storage.Files.Shares.Test
             var actual = new MemoryStream();
             await downloadResponse.Value.Content.CopyToAsync(actual);
             TestHelper.AssertSequenceEqual(data, actual.ToArray());
+            Assert.AreNotEqual(0, timesDownloadFaulted());
+            Assert.AreNotEqual(0, timesUploadFaulted);
         }
 
         [Test]
