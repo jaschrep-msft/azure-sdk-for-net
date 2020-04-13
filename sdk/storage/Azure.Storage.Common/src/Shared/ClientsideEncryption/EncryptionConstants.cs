@@ -26,5 +26,7 @@ namespace Azure.Storage.Common.Cryptography
         public const int DefaultRollingBufferSize = 10 * Constants.MB;
 
         public const string XMsRange = "x-ms-range";
+
+        public const string AdjustedRangeContextKey = "x-ms-adjusted-clientside-encryption-download-range";
     }
 }

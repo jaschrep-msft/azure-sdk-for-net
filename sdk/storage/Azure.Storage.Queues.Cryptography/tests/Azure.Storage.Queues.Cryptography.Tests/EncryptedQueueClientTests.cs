@@ -60,7 +60,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
         /// </summary>
         public EncryptedQueueClient GetEncryptedQueueClient(
             QueueClient queue,
-            ClientsideEncryptionOptions encryptionOptions,
+            ClientSideEncryptionOptions encryptionOptions,
             QueueClientOptions options)
         {
             var client = InstrumentClient(new EncryptedQueueClient(
@@ -108,7 +108,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -154,7 +154,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -188,7 +188,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var track2Queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -234,7 +234,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var track2Queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -273,7 +273,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
                 var queue = new EncryptedQueueClient(
                     disposable.Queue.Uri,
                     GetNewSharedKeyCredentials(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = key,
                         EncryptionKeyWrapAlgorithm = "RSA-OAEP-256"
@@ -301,7 +301,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
                 var plainQueueClient = disposable.Queue;
                 var encryptedQueueClient = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -331,7 +331,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -355,7 +355,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
             {
                 var queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -366,7 +366,7 @@ namespace Azure.Storage.Queues.Cryptography.Tests
 
                 queue = GetEncryptedQueueClient(
                     disposable.Queue,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = default, // we want the key resolver to trigger; no cached key
                         KeyResolver = mockKey

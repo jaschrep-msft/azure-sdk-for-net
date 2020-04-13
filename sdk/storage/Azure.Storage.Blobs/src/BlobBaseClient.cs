@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -3017,62 +3018,6 @@ namespace Azure.Storage.Blobs.Specialized
             }
         }
         #endregion SetAccessTier
-
-        /// <summary>
-        /// Transforms the content of an individual REST download, not an overall multipart download.
-        /// </summary>
-        /// <param name="content">Content of this download slice.</param>
-        /// <param name="originalRange">Orignially requested range of the slice.</param>
-        /// <param name="receivedContentRange">Content range that came back form the service.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Transformed content.</returns>
-        protected virtual BlobContent TransformDownloadSliceContent(
-            BlobContent content,
-            HttpRange originalRange,
-            string receivedContentRange,
-            CancellationToken cancellationToken = default)
-        {
-            return content; // no-op
-        }
-
-        /// <summary>
-        /// Transforms the content of an individual REST download asyncronously, not an overall multipart download.
-        /// </summary>
-        /// <param name="content">Content of this download slice.</param>
-        /// <param name="originalRange">Orignially requested range of the slice.</param>
-        /// <param name="receivedContentRange">Content range that came back form the service.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Transformed content.</returns>
-        protected virtual Task<BlobContent> TransformDownloadSliceContentAsync(
-            BlobContent content,
-            HttpRange originalRange,
-            string receivedContentRange,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(content); // no-op
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="range"></param>
-        /// <returns></returns>
-        protected virtual HttpRange TransformDownloadSliceRange(HttpRange range)
-        {
-            return range; // no-op
-        }
-
-        /// <summary>
-        /// Accessor for extensions of <see cref="BlobBaseClient"/> in other packages, granting
-        /// access to internal details on a<see cref="BlobContainerClient"/>'s pipeline.
-        /// This lets them create extensions methods on <see cref="BlobContainerClient"/> to
-        /// create the specialized <see cref="BlobBaseClient"/> while maintaining client options,
-        /// much like the standard method <see cref="BlobContainerClient.GetBlobClient(string)"/>.
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns>The details.</returns>
-        protected static (BlobClientOptions options, HttpPipelinePolicy authPolicy) GetContainerPipelineInfo(BlobContainerClient client)
-            => (client.SourceOptions, client.AuthenticationPolicy);
     }
 
     /// <summary>

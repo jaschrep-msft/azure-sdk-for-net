@@ -59,7 +59,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
         public EncryptedBlobClient GetEncryptedBlobClient(
             BlobContainerClient containerClient,
             string blobName,
-            ClientsideEncryptionOptions encryptionOptions)
+            ClientSideEncryptionOptions encryptionOptions)
             => InstrumentClient(containerClient.GetEncryptedBlobClient(
                 blobName,
                 encryptionOptions));
@@ -82,7 +82,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var blob = GetEncryptedBlobClient(
                     disposable.Container,
                     blobName,
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -128,7 +128,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var blob = GetEncryptedBlobClient(
                     disposable.Container,
                     GetNewBlobName(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -170,7 +170,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var blob = GetEncryptedBlobClient(
                     disposable.Container,
                     GetNewBlobName(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -214,7 +214,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var track2Blob = GetEncryptedBlobClient(
                     disposable.Container,
                     GetNewBlobName(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -253,7 +253,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var track2Blob = GetEncryptedBlobClient(
                     disposable.Container,
                     GetNewBlobName(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = mockKey,
                         KeyResolver = mockKey
@@ -291,7 +291,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                 var blob = GetEncryptedBlobClient(
                     disposable.Container,
                     GetNewBlobName(),
-                    new ClientsideEncryptionOptions()
+                    new ClientSideEncryptionOptions()
                     {
                         KeyEncryptionKey = key,
                         EncryptionKeyWrapAlgorithm = "RSA-OAEP-256"
@@ -335,7 +335,7 @@ namespace Azure.Storage.Blobs.Cryptography.Tests
                     var blob = GetEncryptedBlobClient(
                         disposable.Container,
                         GetNewBlobName(),
-                        new ClientsideEncryptionOptions()
+                        new ClientSideEncryptionOptions()
                         {
                             KeyEncryptionKey = key,
                             KeyResolver = key

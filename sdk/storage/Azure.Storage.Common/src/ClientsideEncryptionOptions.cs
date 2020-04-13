@@ -4,13 +4,27 @@
 using System;
 using Azure.Core.Cryptography;
 
-namespace Azure.Storage.Common.Cryptography
+namespace Azure.Storage
 {
     /// <summary>
     /// Provides the client configuration options for connecting to Azure Blob using clientside encryption.
     /// </summary>
-    public class ClientsideEncryptionOptions
+    public class ClientSideEncryptionOptions
     {
+        /// <summary>
+        /// Construts a version-specific <see cref="Azure.Storage.ClientSideEncryptionVersion"/>.
+        /// </summary>
+        /// <param name="version"></param>
+        public ClientSideEncryptionOptions(ClientSideEncryptionVersion version)
+        {
+            ClientSideEncryptionVersion = version;
+        }
+
+        /// <summary>
+        /// Version string for clientside encryption.
+        /// </summary>
+        public ClientSideEncryptionVersion ClientSideEncryptionVersion { get; }
+
         /// <summary>
         /// Required for upload operations.
         /// The key used to wrap the generated content encryption key.

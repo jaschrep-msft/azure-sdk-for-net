@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Storage.Blobs.Models;
@@ -68,6 +69,8 @@ namespace Azure.Storage.Blobs
         /// between primary and secondary Uri.
         /// </summary>
         public Uri GeoRedundantSecondaryUri { get; set; }
+
+        internal BlobTransferTransformations ContentTransforms { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BlobClientOptions"/>
@@ -228,5 +231,96 @@ namespace Azure.Storage.Blobs
         {
             return this.Build(credentials, GeoRedundantSecondaryUri);
         }
+
+        internal class BlobTransferTransformations
+        {
+            public List<IBlobUploadParameterTransform> UploadParameterTransforms { get; } = new List<IBlobUploadParameterTransform>();
+            public List<IBlobDownloadParameterTransform> DownloadParameterTransforms { get; } = new List<IBlobDownloadParameterTransform>();
+            public List<IBlobDownloadResultTransform> DownloadResultTransforms { get; } = new List<IBlobDownloadResultTransform>();
+        }
+    }
+}
+
+namespace Azure.Storage.Blobs.Specialized
+{
+#pragma warning disable SA1402 // File may only contain a single type.
+                               // We are providing advanced options on this class in a specialized namespace.
+    /// <summary>
+    /// Specialized extension methods for <see cref="BlobClientOptions"/>.
+    /// </summary>
+    public static partial class BlobClientOptionsExtensions
+#pragma warning restore SA1402 // File may only contain a single type
+    {
+        /// <summary>
+        /// Appends a blob upload parameter transformation to these client options.
+        /// Transforms are applied in the order they are added.
+        /// </summary>
+        /// <param name="options">Client options to add the transform to.</param>
+        /// <param name="transform">The transform to add.</param>
+        public static void AddUploadParametersTransform(
+            this BlobClientOptions options,
+            IBlobUploadParameterTransform transform)
+            => options.ContentTransforms.UploadParameterTransforms.Add(transform);
+
+        /// <summary>
+        /// Inserts a blob upload parameter transformation to these client options at the specified index.
+        /// Transforms are applied in the order they are inserted.
+        /// </summary>
+        /// <param name="options">Client options to insert the transform into.</param>
+        /// <param name="index">Index to insert at.</param>
+        /// <param name="transform">The transform to insert.</param>
+        public static void InsertUploadParametersTransform(
+            this BlobClientOptions options,
+            int index,
+            IBlobUploadParameterTransform transform)
+            => options.ContentTransforms.UploadParameterTransforms.Insert(index, transform);
+
+        /// <summary>
+        /// Appends a blob download parameter transformation to these client options.
+        /// Transforms are applied in the order they are added.
+        /// </summary>
+        /// <param name="options">Client options to add the transform to.</param>
+        /// <param name="transform">The transform to add.</param>
+        public static void AddDownloadParametersTransform(
+            this BlobClientOptions options,
+            IBlobDownloadParameterTransform transform)
+            => options.ContentTransforms.DownloadParameterTransforms.Add(transform);
+
+        /// <summary>
+        /// Inserts a blob download parameter transformation to these client options at the specified index.
+        /// Transforms are applied in the order they are inserted.
+        /// </summary>
+        /// <param name="options">Client options to insert the transform into.</param>
+        /// <param name="index">Index to insert at.</param>
+        /// <param name="transform">The transform to insert.</param>
+        public static void InsertDownloadParametersTransform(
+            this BlobClientOptions options,
+            int index,
+            IBlobDownloadParameterTransform transform)
+            => options.ContentTransforms.DownloadParameterTransforms.Insert(index, transform);
+
+        /// <summary>
+        /// Appends a blob download result transformation to these client options.
+        /// Transforms are applied in the order they are added.
+        /// </summary>
+        /// <param name="options">Client options to add the transform to.</param>
+        /// <param name="transform">The transform to add.</param>
+        public static void AddDownloadResultTransform(
+            this BlobClientOptions options,
+            IBlobDownloadResultTransform transform)
+            => options.ContentTransforms.DownloadResultTransforms.Add(transform);
+
+        /// <summary>
+        /// Inserts a blob download result transformation to these client options at the specified index.
+        /// Transforms are applied in the order they are inserted.
+        /// </summary>
+        /// <param name="options">Client options to insert the transform into.</param>
+        /// <param name="index">Index to insert at.</param>
+        /// <param name="transform">The transform to insert.</param>
+        public static void InsertDownloadResultTransform(
+            this BlobClientOptions options,
+            int index,
+            IBlobDownloadResultTransform transform)
+            => options.ContentTransforms.DownloadResultTransforms.Insert(index, transform);
     }
 }
