@@ -38,9 +38,10 @@ namespace Azure.Core.Pipeline
             Func<long, Stream> streamFactory,
             Func<long, ValueTask<Stream>> asyncResponseFactory,
             ResponseClassifier responseClassifier,
-            int maxRetries)
+            int maxRetries,
+            Action<Exception> retrySideEffect = default)
         {
-            return new RetriableStreamImpl(initialResponse, streamFactory, asyncResponseFactory, responseClassifier, maxRetries);
+            return new RetriableStreamImpl(initialResponse, streamFactory, asyncResponseFactory, retrySideEffect, responseClassifier, maxRetries);
         }
 
         private class RetriableStreamImpl : Stream
@@ -50,6 +51,8 @@ namespace Azure.Core.Pipeline
             private readonly Func<long, Stream> _streamFactory;
 
             private readonly Func<long, ValueTask<Stream>> _asyncStreamFactory;
+
+            private readonly Action<Exception> _retrySideEffect;
 
             private readonly int _maxRetries;
 
@@ -63,7 +66,7 @@ namespace Azure.Core.Pipeline
 
             private List<Exception> _exceptions;
 
-            public RetriableStreamImpl(Stream initialStream, Func<long, Stream> streamFactory, Func<long, ValueTask<Stream>> asyncStreamFactory, ResponseClassifier responseClassifier, int maxRetries)
+            public RetriableStreamImpl(Stream initialStream, Func<long, Stream> streamFactory, Func<long, ValueTask<Stream>> asyncStreamFactory, Action<Exception> retrySideEffect, ResponseClassifier responseClassifier, int maxRetries)
             {
                 if (initialStream.CanSeek)
                 {
@@ -81,6 +84,7 @@ namespace Azure.Core.Pipeline
                 _streamFactory = streamFactory;
                 _responseClassifier = responseClassifier;
                 _asyncStreamFactory = asyncStreamFactory;
+                _retrySideEffect = retrySideEffect;
                 _maxRetries = maxRetries;
             }
 
@@ -139,6 +143,7 @@ namespace Azure.Core.Pipeline
 
                 _currentStream.Dispose();
 
+                _retrySideEffect?.Invoke(exception);
                 _currentStream = EnsureStream(async ? (await _asyncStreamFactory(_position).ConfigureAwait(false)) : _streamFactory(_position));
             }
 
