@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core.Pipeline;
@@ -342,6 +343,37 @@ namespace Azure.Core.Tests
                 ResponseClassifier.Shared, maxRetries: 5);
 
             await reliableStream.FlushAsync();
+        }
+
+        [Test]
+        public void SideEffectTriggersOnRetry()
+        {
+            const int retries = 3;
+            MockReadStream stream = new(length: 100, throwAfter: 25, offset: 0, exceptionType: typeof(IOException), canSeek: false);
+            int sideEffectTriggers = 0;
+            Stream reliableStream = RetriableStream.Create(
+                stream,
+                _ => stream,
+                _ => new ValueTask<Stream>(stream),
+                ResponseClassifier.Shared,
+                retries,
+                _ => sideEffectTriggers += 1);
+
+            Exception exception = null;
+            try
+            {
+                reliableStream.CopyTo(Stream.Null, 3);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            Assert.That(sideEffectTriggers, Is.EqualTo(retries));
+            Assert.That(exception, Is.Not.Null.And.TypeOf<AggregateException>());
+            AggregateException aggregateException = exception as AggregateException;
+            Assert.That(aggregateException.InnerExceptions.Count, Is.EqualTo(retries + 1));
+            Assert.That(aggregateException.InnerExceptions, Is.All.TypeOf<IOException>());
         }
 
         private void AssertReads(byte[] buffer, int length)
