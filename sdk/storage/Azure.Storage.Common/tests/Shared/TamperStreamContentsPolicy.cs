@@ -14,31 +14,33 @@ namespace Azure.Storage.Test.Shared
         /// <summary>
         /// Default tampering that changes the first byte of the stream.
         /// </summary>
-        private static readonly Func<Stream, Stream> _defaultStreamTransform = stream =>
+        private static Func<Stream, Stream> GetByteShiftTransform(int index) => stream =>
         {
-            if (stream is not MemoryStream)
+            if (stream is not MemoryStream memoryStream)
             {
-                var buffer = new MemoryStream();
-                stream.CopyTo(buffer);
-                stream = buffer;
+                memoryStream = new MemoryStream();
+                stream.CopyTo(memoryStream);
             }
 
-            stream.Position = 0;
-            var firstByte = stream.ReadByte();
+            memoryStream.Position = index;
+            int b = stream.ReadByte();
 
-            stream.Position = 0;
-            stream.WriteByte((byte)((firstByte + 1) % byte.MaxValue));
+            memoryStream.Position = index;
+            memoryStream.WriteByte((byte)((b + 1) % byte.MaxValue));
 
-            stream.Position = 0;
-            return stream;
+            memoryStream.Position = 0;
+            return memoryStream;
         };
 
         private readonly Func<Stream, Stream> _streamTransform;
 
         public TamperStreamContentsPolicy(Func<Stream, Stream> streamTransform = default)
         {
-            _streamTransform = streamTransform ?? _defaultStreamTransform;
+            _streamTransform = streamTransform ?? GetByteShiftTransform(0);
         }
+
+        public static TamperStreamContentsPolicy ShiftBytePolicy(int index)
+            => new TamperStreamContentsPolicy(GetByteShiftTransform(index));
 
         public bool TransformRequestBody { get; set; }
 

@@ -1698,14 +1698,7 @@ namespace Azure.Storage.Blobs.Specialized
                     rangeGetContentMD5 = true;
                     break;
                 case StorageChecksumAlgorithm.StorageCrc64:
-                    if (pageRange?.Length <= Constants.StructuredMessage.MaxDownloadCrcWithHeader)
-                    {
-                        rangeGetContentCRC64 = true;
-                    }
-                    else
-                    {
-                        structuredBodyType = Constants.StructuredMessage.CrcStructuredMessage;
-                    }
+                    structuredBodyType = Constants.StructuredMessage.CrcStructuredMessage;
                     break;
                 default:
                     break;

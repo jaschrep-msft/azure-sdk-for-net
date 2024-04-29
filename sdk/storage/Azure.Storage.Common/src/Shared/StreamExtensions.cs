@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
 
 namespace Azure.Storage
 {
@@ -48,7 +51,7 @@ namespace Azure.Storage
             }
         }
 
-        public static Task CopyToInternal(
+        public static Task<long> CopyToInternal(
             this Stream src,
             Stream dest,
             bool async,
@@ -79,21 +82,61 @@ namespace Azure.Storage
         /// Cancellation token for the operation.
         /// </param>
         /// <returns></returns>
-        public static async Task CopyToInternal(
+        public static async Task<long> CopyToInternal(
             this Stream src,
             Stream dest,
             int bufferSize,
             bool async,
             CancellationToken cancellationToken)
         {
-            if (async)
+            Argument.AssertNotNull(src, nameof(src));
+            Argument.AssertNotNull(dest, nameof(dest));
+            Argument.AssertInRange(bufferSize, 1, int.MaxValue, nameof(bufferSize));
+
+            long copied = 0;
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+            try
             {
-                await src.CopyToAsync(dest, bufferSize, cancellationToken).ConfigureAwait(false);
+                if (async)
+                {
+                    int bytesRead;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+                    while ((bytesRead = await src.ReadAsync(new Memory<byte>(buffer), cancellationToken).ConfigureAwait(false)) != 0)
+                    {
+                        await dest.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, bytesRead), cancellationToken).ConfigureAwait(false);
+                        copied += bytesRead;
+                    }
+#else
+                    while ((bytesRead = await src.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
+                    {
+                        await dest.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                        copied += bytesRead;
+                    }
+#endif
+                }
+                else
+                {
+                    int bytesRead;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+                    while ((bytesRead = src.Read(new Span<byte>(buffer))) != 0)
+                    {
+                        dest.Write(buffer, 0, bytesRead);
+                        copied += bytesRead;
+                    }
+#else
+                    while ((bytesRead = src.Read(buffer, 0, buffer.Length)) != 0)
+                    {
+                        dest.Write(buffer, 0, bytesRead);
+                        copied += bytesRead;
+                    }
+#endif
+                }
             }
-            else
+            finally
             {
-                src.CopyTo(dest, bufferSize);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
+            return copied;
         }
     }
 }
