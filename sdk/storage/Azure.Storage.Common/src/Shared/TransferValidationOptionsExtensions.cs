@@ -21,6 +21,11 @@ namespace Azure.Storage
             return checksumAlgorithm;
         }
 
+        public static bool UseStructuredMessage(this DownloadTransferValidationOptions options)
+        {
+            return (options?.ChecksumAlgorithm.ResolveAuto() ?? StorageChecksumAlgorithm.None) == StorageChecksumAlgorithm.StorageCrc64;
+        }
+
         public static UploadTransferValidationOptions ToValidationOptions(this byte[] md5)
             => md5 == default
                 ? default

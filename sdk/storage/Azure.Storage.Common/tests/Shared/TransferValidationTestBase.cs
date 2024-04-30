@@ -1284,7 +1284,10 @@ namespace Azure.Storage.Test.Shared
             await SetupDataAsync(client, new MemoryStream(data));
 
             // make pipeline assertion for checking checksum was present on download
-            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: GetResponseChecksumAssertion(algorithm));
+            var assertion = algorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64
+                ? GetResponseStructuredMessageAssertion(StructuredMessage.Flags.StorageCrc64)
+                : GetResponseChecksumAssertion(algorithm);
+            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: assertion);
             var clientOptions = ClientBuilder.GetOptions();
             clientOptions.AddPolicy(checksumPipelineAssertion, HttpPipelinePosition.PerCall);
 
@@ -1344,8 +1347,10 @@ namespace Azure.Storage.Test.Shared
                 };
 
             // make pipeline assertion for checking checksum was present on download
-            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: GetResponseChecksumAssertion(
-                clientAlgorithm));
+            var assertion = clientAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64
+                ? GetResponseStructuredMessageAssertion(StructuredMessage.Flags.StorageCrc64)
+                : GetResponseChecksumAssertion(clientAlgorithm);
+            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: assertion);
             var clientOptions = ClientBuilder.GetOptions();
             clientOptions.AddPolicy(checksumPipelineAssertion, HttpPipelinePosition.PerCall);
 
@@ -1407,8 +1412,10 @@ namespace Azure.Storage.Test.Shared
                 };
 
             // make pipeline assertion for checking checksum was present on upload
-            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: GetResponseChecksumAssertion(
-                overrideAlgorithm));
+            var assertion = overrideAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64
+                ? GetResponseStructuredMessageAssertion(StructuredMessage.Flags.StorageCrc64)
+                : GetResponseChecksumAssertion(overrideAlgorithm);
+            var checksumPipelineAssertion = new AssertMessageContentsPolicy(checkResponse: assertion);
             var clientOptions = ClientBuilder.GetOptions();
             clientOptions.AddPolicy(checksumPipelineAssertion, HttpPipelinePosition.PerCall);
 

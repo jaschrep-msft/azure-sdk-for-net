@@ -253,38 +253,6 @@ namespace Azure.Storage
             // The number of bytes we just downloaded.
             long downloadSize = GetResponseRange(response.GetRawResponse()).Length.Value;
 
-            //// The number of bytes we copied in the last loop.
-            //int copiedBytes;
-
-            //// Bytes we have copied so far.
-            //long totalCopiedBytes = 0;
-
-            //// Bytes remaining to copy.  It is save to truncate the long because we asked for a max of int _buffer size bytes.
-            //int remainingBytes = (int)downloadSize;
-
-            //do
-            //{
-            //    if (async)
-            //    {
-            //        copiedBytes = await networkStream.ReadAsync(
-            //            buffer: _buffer,
-            //            offset: totalCopiedBytes,
-            //            count: remainingBytes,
-            //            cancellationToken: cancellationToken).ConfigureAwait(false);
-            //    }
-            //    else
-            //    {
-            //        copiedBytes = networkStream.Read(
-            //            buffer: _buffer,
-            //            offset: totalCopiedBytes,
-            //            count: remainingBytes);
-            //    }
-
-            //    totalCopiedBytes += copiedBytes;
-            //    remainingBytes -= copiedBytes;
-            //}
-            //while (copiedBytes != 0);
-
             _bufferLength = (int)await networkStream.CopyToInternal(
                 new MemoryStream(_buffer),
                 async,
@@ -296,8 +264,7 @@ namespace Azure.Storage
 
             // if we deferred transactional hash validation on download, validate now
             // currently we always defer but that may change
-            // TODO work out autovalidate flag behavior with structured message
-            if (_validationOptions != default && _validationOptions.ChecksumAlgorithm == StorageChecksumAlgorithm.MD5 && !_validationOptions.AutoValidateChecksum)
+            if (_validationOptions != default && !_validationOptions.UseStructuredMessage() && !_validationOptions.AutoValidateChecksum)
             {
                 ContentHasher.AssertResponseHashMatch(_buffer, _bufferPosition, _bufferLength, _validationOptions.ChecksumAlgorithm, response.GetRawResponse());
             }

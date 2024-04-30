@@ -1692,6 +1692,15 @@ namespace Azure.Storage.Blobs.Specialized
             bool? rangeGetContentMD5 = null;
             bool? rangeGetContentCRC64 = null;
             string structuredBodyType = null;
+            if (validationOptions.UseStructuredMessage())
+            {
+                structuredBodyType = Constants.StructuredMessage.CrcStructuredMessage;
+            }
+            else if (validationOptions is not null)
+            {
+                rangeGetContentCRC64 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64;
+                rangeGetContentMD5 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.MD5;
+            }
             switch (validationOptions?.ChecksumAlgorithm.ResolveAuto())
             {
                 case StorageChecksumAlgorithm.MD5:
