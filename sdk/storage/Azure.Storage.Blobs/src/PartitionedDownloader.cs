@@ -416,7 +416,7 @@ namespace Azure.Storage.Blobs
             CancellationToken cancellationToken)
         {
             CancellationHelper.ThrowIfCancellationRequested(cancellationToken);
-            using IHasher hasher = ContentHasher.GetHasherFromAlgorithmId(_validationAlgorithm);
+            using IHasher hasher = ValidationOptions.UseStructuredMessage() ? null : ContentHasher.GetHasherFromAlgorithmId(_validationAlgorithm);
             using Stream rawSource = response.Value.Content;
             using Stream source = hasher != null
                 ? ChecksumCalculatingStream.GetReadStream(rawSource, hasher.AppendHash)

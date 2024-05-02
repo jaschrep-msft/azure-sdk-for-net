@@ -264,7 +264,7 @@ namespace Azure.Storage
 
             // if we deferred transactional hash validation on download, validate now
             // currently we always defer but that may change
-            if (_validationOptions != default && !_validationOptions.UseStructuredMessage() && !_validationOptions.AutoValidateChecksum)
+            if (_validationOptions != default && _validationOptions.ChecksumAlgorithm != StorageChecksumAlgorithm.None && !_validationOptions.UseStructuredMessage() && !_validationOptions.AutoValidateChecksum)
             {
                 ContentHasher.AssertResponseHashMatch(_buffer, _bufferPosition, _bufferLength, _validationOptions.ChecksumAlgorithm, response.GetRawResponse());
             }

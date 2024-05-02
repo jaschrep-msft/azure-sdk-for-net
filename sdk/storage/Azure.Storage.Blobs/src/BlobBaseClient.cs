@@ -1698,19 +1698,8 @@ namespace Azure.Storage.Blobs.Specialized
             }
             else if (validationOptions is not null)
             {
-                rangeGetContentCRC64 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64;
-                rangeGetContentMD5 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.MD5;
-            }
-            switch (validationOptions?.ChecksumAlgorithm.ResolveAuto())
-            {
-                case StorageChecksumAlgorithm.MD5:
-                    rangeGetContentMD5 = true;
-                    break;
-                case StorageChecksumAlgorithm.StorageCrc64:
-                    structuredBodyType = Constants.StructuredMessage.CrcStructuredMessage;
-                    break;
-                default:
-                    break;
+                rangeGetContentCRC64 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.StorageCrc64 ? true : null;
+                rangeGetContentMD5 = validationOptions.ChecksumAlgorithm.ResolveAuto() == StorageChecksumAlgorithm.MD5 ? true : null;
             }
 
             if (async)
@@ -1759,7 +1748,7 @@ namespace Azure.Storage.Blobs.Specialized
             if (response.GetRawResponse().Headers.TryGetValue(Constants.StructuredMessage.CrcStructuredMessageHeader, out string _) &&
                 response.GetRawResponse().Headers.TryGetValue(Constants.HeaderNames.ContentLength, out string rawContentLength))
             {
-                result.Content = new StructuredMessageDecodingStream(result.Content, long.Parse(rawContentLength));
+                (result.Content, StructuredMessageDecodingStream.DecodedData data) = StructuredMessageDecodingStream.WrapStream(result.Content, long.Parse(rawContentLength));
             }
             // if not null, we expected a structured message response
             // but we didn't find one in the above condition
